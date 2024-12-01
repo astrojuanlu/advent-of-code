@@ -1,4 +1,4 @@
-pub fn total_distance(left: Vec<usize>, right: Vec<usize>) -> usize {
+pub fn total_distance(left: &Vec<usize>, right: &Vec<usize>) -> usize {
     if left.len() != right.len() {
         panic!("Vectors must be the same length");
     }
@@ -25,7 +25,7 @@ mod tests {
         let left = vec![3, 4, 2, 1, 3, 3];
         let right = vec![4, 3, 5, 3, 9, 3];
 
-        let result = compute_total_distance(left, right);
+        let result = total_distance(&left, &right);
         assert_eq!(result, 11);
     }
 }

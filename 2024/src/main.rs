@@ -33,7 +33,7 @@ fn main() {
 
     let (left, right) = parse_input(contents);
 
-    let result = total_distance(left, right);
+    let result = total_distance(&left, &right);
 
     println!("Total distance: {result}");
 }
