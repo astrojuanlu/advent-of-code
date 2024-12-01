@@ -1,4 +1,4 @@
-pub fn compute_total_distance(left: Vec<u32>, right: Vec<u32>) -> u32 {
+pub fn total_distance(left: Vec<usize>, right: Vec<usize>) -> usize {
     if left.len() != right.len() {
         panic!("Vectors must be the same length");
     }
@@ -8,7 +8,7 @@ pub fn compute_total_distance(left: Vec<u32>, right: Vec<u32>) -> u32 {
     sorted_left.sort();
     sorted_right.sort();
 
-    let mut distance: u32 = 0;
+    let mut distance: usize = 0;
     for index in 0..left.len() {
         distance = distance + sorted_left[index].abs_diff(sorted_right[index]);
     }
@@ -21,7 +21,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn compute_total_distance_works() {
+    fn total_distance_works() {
         let left = vec![3, 4, 2, 1, 3, 3];
         let right = vec![4, 3, 5, 3, 9, 3];
 

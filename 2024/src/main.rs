@@ -1,10 +1,10 @@
 use std::fs;
 
-use aoc24::compute_total_distance;
+use aoc24::total_distance;
 
-pub fn parse_input(contents: String) -> (Vec<u32>, Vec<u32>) {
-    let mut left: Vec<u32> = Vec::new();
-    let mut right: Vec<u32> = Vec::new();
+pub fn parse_input(contents: String) -> (Vec<usize>, Vec<usize>) {
+    let mut left: Vec<usize> = Vec::new();
+    let mut right: Vec<usize> = Vec::new();
 
     let lines = contents.lines();
     for line in lines {
@@ -12,12 +12,12 @@ pub fn parse_input(contents: String) -> (Vec<u32>, Vec<u32>) {
         let left_number = numbers
             .next()
             .expect("Left value should not be empty")
-            .parse::<u32>()
+            .parse::<usize>()
             .unwrap();
         let right_number = numbers
             .next()
             .expect("Right value should not be empty")
-            .parse::<u32>()
+            .parse::<usize>()
             .unwrap();
 
         left.push(left_number);
@@ -33,7 +33,7 @@ fn main() {
 
     let (left, right) = parse_input(contents);
 
-    let result = compute_total_distance(left, right);
+    let result = total_distance(left, right);
 
     println!("Total distance: {result}");
 }
