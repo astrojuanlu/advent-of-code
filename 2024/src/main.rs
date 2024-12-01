@@ -1,5 +1,6 @@
 use std::fs;
 
+use aoc24::similarity_score;
 use aoc24::total_distance;
 
 pub fn parse_input(contents: String) -> (Vec<usize>, Vec<usize>) {
@@ -36,4 +37,8 @@ fn main() {
     let result = total_distance(&left, &right);
 
     println!("Total distance: {result}");
+
+    let result = similarity_score(&left, &right);
+
+    println!("Similarity score: {result}");
 }
