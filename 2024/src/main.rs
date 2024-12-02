@@ -49,7 +49,7 @@ fn main() {
 
     let reports = parse_input_02(contents);
 
-    let result = count_safe_reports(&reports);
+    let result = count_safe_reports(&reports, false);
 
     println!("Safe reports: {result}");
 }

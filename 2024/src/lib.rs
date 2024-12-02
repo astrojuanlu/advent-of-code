@@ -43,7 +43,15 @@ pub fn report_safety(report: &Vec<isize>) -> bool {
         & (diffs.iter().map(|&d| d.abs()).all(|d| d <= 3));
 }
 
-pub fn count_safe_reports(reports: &Vec<Vec<isize>>) -> usize {
+pub fn report_safety_dampener(report: &Vec<isize>) -> bool {
+    return false;
+}
+
+pub fn count_safe_reports(reports: &Vec<Vec<isize>>, dampener: bool) -> usize {
+    if dampener {
+        panic!("Not implemented");
+    }
+
     return reports
         .iter()
         .map(|r| report_safety(&r))
