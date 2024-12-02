@@ -26,6 +26,31 @@ pub fn similarity_score(left: &Vec<usize>, right: &Vec<usize>) -> usize {
     return score;
 }
 
+pub fn report_safety(report: &Vec<isize>) -> bool {
+    let mut report_orig = report.clone();
+    let mut report_shifted = report.clone();
+
+    report_orig.remove(report_orig.len() - 1);
+    report_shifted.remove(0);
+
+    let diffs: Vec<isize> = report_orig
+        .iter()
+        .zip(report_shifted.iter())
+        .map(|(&o, &s)| o - s)
+        .collect();
+
+    return (diffs.iter().all(|&d| d > 0) | diffs.iter().all(|&d| d < 0))
+        & (diffs.iter().map(|&d| d.abs()).all(|d| d <= 3));
+}
+
+pub fn count_safe_reports(reports: &Vec<Vec<isize>>) -> usize {
+    return reports
+        .iter()
+        .map(|r| report_safety(&r))
+        .filter(|&s| s == true)
+        .count();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -46,5 +71,23 @@ mod tests {
 
         let result = similarity_score(&left, &right);
         assert_eq!(result, 31);
+    }
+
+    #[test]
+    fn report_safety_works() {
+        let safe_report1 = vec![7, 6, 4, 2, 1];
+        let safe_report2 = vec![1, 3, 6, 7, 9];
+        let unsafe_report1 = vec![1, 2, 7, 8, 9];
+        let unsafe_report2 = vec![9, 7, 6, 2, 1];
+        let unsafe_report3 = vec![1, 3, 2, 4, 5];
+        let unsafe_report4 = vec![8, 6, 4, 4, 1];
+
+        assert!(report_safety(&safe_report1));
+        assert!(report_safety(&safe_report2));
+
+        assert!(!report_safety(&unsafe_report1));
+        assert!(!report_safety(&unsafe_report2));
+        assert!(!report_safety(&unsafe_report3));
+        assert!(!report_safety(&unsafe_report4));
     }
 }
