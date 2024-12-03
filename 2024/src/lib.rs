@@ -1,3 +1,8 @@
+#[derive(Debug)]
+pub enum InvalidReportError {
+    CannotDampen,
+}
+
 pub fn total_distance(left: &Vec<usize>, right: &Vec<usize>) -> usize {
     if left.len() != right.len() {
         panic!("Vectors must be the same length");
@@ -48,32 +53,33 @@ fn report_safety_no_dampener(report: &Vec<isize>) -> bool {
         & (diffs.iter().map(|&d| d.abs()).all(|d| d <= 3));
 }
 
-fn dampen_report(report: &Vec<isize>) -> Vec<isize> {
+fn dampen_report(report: &Vec<isize>) -> Result<Vec<isize>, InvalidReportError> {
     // If it's valid, just return it
     let mut dampened_report = report.clone();
     if report_safety_no_dampener(&dampened_report) {
-        return dampened_report;
+        return Ok(dampened_report);
     }
 
     // Otherwise it's easier to just brute force all the variations
     for index in 0..report.len() {
         dampened_report.remove(index);
         if report_safety_no_dampener(&dampened_report) {
-            return dampened_report;
+            return Ok(dampened_report);
         }
         dampened_report = report.clone();
     }
 
-    // No solution found
-    // FIXME: Return a Result
-    return report.clone();
+    Err(InvalidReportError::CannotDampen)
 }
 
 pub fn report_safety(report: &Vec<isize>, dampener: bool) -> bool {
     let mut result = report_safety_no_dampener(report);
     if !result & dampener {
-        let dampened_report = dampen_report(report);
-        result = report_safety_no_dampener(&dampened_report);
+        if let Ok(dampened_report) = dampen_report(report) {
+            result = report_safety_no_dampener(&dampened_report);
+        } else {
+            result = false;
+        }
     }
     return result;
 }
@@ -133,15 +139,15 @@ mod tests {
         let safe_report_with_dampening1 = vec![1, 3, 2, 4, 5];
         let safe_report_with_dampening2 = vec![8, 6, 4, 4, 1];
 
-        assert_eq!(dampen_report(&safe_report1), safe_report1);
-        assert_eq!(dampen_report(&safe_report2), safe_report2);
+        assert_eq!(dampen_report(&safe_report1).unwrap(), safe_report1);
+        assert_eq!(dampen_report(&safe_report2).unwrap(), safe_report2);
 
         assert_eq!(
-            dampen_report(&safe_report_with_dampening1),
+            dampen_report(&safe_report_with_dampening1).unwrap(),
             vec![1, 2, 4, 5]
         );
         assert_eq!(
-            dampen_report(&safe_report_with_dampening2),
+            dampen_report(&safe_report_with_dampening2).unwrap(),
             vec![8, 6, 4, 1]
         );
     }
