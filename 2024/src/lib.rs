@@ -26,35 +26,62 @@ pub fn similarity_score(left: &Vec<usize>, right: &Vec<usize>) -> usize {
     return score;
 }
 
-pub fn report_safety(report: &Vec<isize>) -> bool {
+fn report_diffs(report: &Vec<isize>) -> Vec<isize> {
     let mut report_orig = report.clone();
     let mut report_shifted = report.clone();
 
+    // TODO: Use slices instead?
     report_orig.remove(report_orig.len() - 1);
     report_shifted.remove(0);
 
-    let diffs: Vec<isize> = report_orig
+    return report_orig
         .iter()
         .zip(report_shifted.iter())
         .map(|(&o, &s)| o - s)
         .collect();
+}
+
+fn report_safety_no_dampener(report: &Vec<isize>) -> bool {
+    let diffs = report_diffs(&report);
 
     return (diffs.iter().all(|&d| d > 0) | diffs.iter().all(|&d| d < 0))
         & (diffs.iter().map(|&d| d.abs()).all(|d| d <= 3));
 }
 
-pub fn report_safety_dampener(report: &Vec<isize>) -> bool {
-    return false;
+fn dampen_report(report: &Vec<isize>) -> Vec<isize> {
+    // If it's valid, just return it
+    let mut dampened_report = report.clone();
+    if report_safety_no_dampener(&dampened_report) {
+        return dampened_report;
+    }
+
+    // Otherwise it's easier to just brute force all the variations
+    for index in 0..report.len() {
+        dampened_report.remove(index);
+        if report_safety_no_dampener(&dampened_report) {
+            return dampened_report;
+        }
+        dampened_report = report.clone();
+    }
+
+    // No solution found
+    // FIXME: Return a Result
+    return report.clone();
+}
+
+pub fn report_safety(report: &Vec<isize>, dampener: bool) -> bool {
+    let mut result = report_safety_no_dampener(report);
+    if !result & dampener {
+        let dampened_report = dampen_report(report);
+        result = report_safety_no_dampener(&dampened_report);
+    }
+    return result;
 }
 
 pub fn count_safe_reports(reports: &Vec<Vec<isize>>, dampener: bool) -> usize {
-    if dampener {
-        panic!("Not implemented");
-    }
-
     return reports
         .iter()
-        .map(|r| report_safety(&r))
+        .map(|r| report_safety(&r, dampener))
         .filter(|&s| s == true)
         .count();
 }
@@ -82,7 +109,7 @@ mod tests {
     }
 
     #[test]
-    fn report_safety_works() {
+    fn report_safety_no_dampener_works() {
         let safe_report1 = vec![7, 6, 4, 2, 1];
         let safe_report2 = vec![1, 3, 6, 7, 9];
         let unsafe_report1 = vec![1, 2, 7, 8, 9];
@@ -90,12 +117,50 @@ mod tests {
         let unsafe_report3 = vec![1, 3, 2, 4, 5];
         let unsafe_report4 = vec![8, 6, 4, 4, 1];
 
-        assert!(report_safety(&safe_report1));
-        assert!(report_safety(&safe_report2));
+        assert!(report_safety(&safe_report1, false));
+        assert!(report_safety(&safe_report2, false));
 
-        assert!(!report_safety(&unsafe_report1));
-        assert!(!report_safety(&unsafe_report2));
-        assert!(!report_safety(&unsafe_report3));
-        assert!(!report_safety(&unsafe_report4));
+        assert!(!report_safety(&unsafe_report1, false));
+        assert!(!report_safety(&unsafe_report2, false));
+        assert!(!report_safety(&unsafe_report3, false));
+        assert!(!report_safety(&unsafe_report4, false));
+    }
+
+    #[test]
+    fn dampen_report_works() {
+        let safe_report1 = vec![7, 6, 4, 2, 1];
+        let safe_report2 = vec![1, 3, 6, 7, 9];
+        let safe_report_with_dampening1 = vec![1, 3, 2, 4, 5];
+        let safe_report_with_dampening2 = vec![8, 6, 4, 4, 1];
+
+        assert_eq!(dampen_report(&safe_report1), safe_report1);
+        assert_eq!(dampen_report(&safe_report2), safe_report2);
+
+        assert_eq!(
+            dampen_report(&safe_report_with_dampening1),
+            vec![1, 2, 4, 5]
+        );
+        assert_eq!(
+            dampen_report(&safe_report_with_dampening2),
+            vec![8, 6, 4, 1]
+        );
+    }
+
+    #[test]
+    fn report_safety_dampener_works() {
+        let safe_report1 = vec![7, 6, 4, 2, 1];
+        let safe_report2 = vec![1, 3, 6, 7, 9];
+        let safe_report3 = vec![1, 3, 2, 4, 5];
+        let safe_report4 = vec![8, 6, 4, 4, 1];
+        let unsafe_report1 = vec![1, 2, 7, 8, 9];
+        let unsafe_report2 = vec![9, 7, 6, 2, 1];
+
+        assert!(report_safety(&safe_report1, true));
+        assert!(report_safety(&safe_report2, true));
+        assert!(report_safety(&safe_report3, true));
+        assert!(report_safety(&safe_report4, true));
+
+        assert!(!report_safety(&unsafe_report1, true));
+        assert!(!report_safety(&unsafe_report2, true));
     }
 }
