@@ -2,7 +2,8 @@ use std::fs;
 
 // use aoc24::similarity_score;
 // use aoc24::total_distance;
-use aoc24::count_safe_reports;
+// use aoc24::count_safe_reports;
+use aoc24::run_mul_program;
 
 pub fn parse_input_01(contents: String) -> (Vec<usize>, Vec<usize>) {
     let mut left: Vec<usize> = Vec::new();
@@ -44,12 +45,10 @@ pub fn parse_input_02(contents: String) -> Vec<Vec<isize>> {
 }
 
 fn main() {
-    let contents = fs::read_to_string("input02.txt").expect("File 'input02.txt' should be present");
+    let contents = fs::read_to_string("input03.txt").expect("File 'input03.txt' should be present");
     println!("{contents}");
 
-    let reports = parse_input_02(contents);
+    let result = run_mul_program(contents, true);
 
-    let result = count_safe_reports(&reports, true);
-
-    println!("Safe reports (including dampening): {result}");
+    println!("Result: {result}");
 }

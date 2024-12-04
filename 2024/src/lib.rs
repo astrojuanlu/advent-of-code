@@ -1,3 +1,5 @@
+use regex::Regex;
+
 #[derive(Debug)]
 pub enum InvalidReportError {
     CannotDampen,
@@ -92,6 +94,51 @@ pub fn count_safe_reports(reports: &Vec<Vec<isize>>, dampener: bool) -> usize {
         .count();
 }
 
+fn cleanup_program(program: String) -> Vec<(isize, isize)> {
+    let re = Regex::new(r"mul\((\d{1,3}),(\d{1,3})\)").unwrap();
+    let mut mul_ops: Vec<(isize, isize)> = Vec::new();
+    for (_, [left, right]) in re.captures_iter(&program).map(|c| c.extract()) {
+        mul_ops.push((
+            left.parse::<isize>().unwrap(),
+            right.parse::<isize>().unwrap(),
+        ));
+    }
+    return mul_ops;
+}
+
+fn execute_mul_ops(mul_ops: Vec<(isize, isize)>) -> isize {
+    return mul_ops.iter().fold(0, |acc, (l, r)| acc + l * r);
+}
+
+fn erase_disabled_code(program: String) -> String {
+    let mut parts: Vec<&str> = Vec::new();
+    let mut index = 0;
+    while index < program.len() {
+        if let Some(start_disable) = program[index..].find("don't()") {
+            parts.push(&program[index..index + start_disable + 7]);
+            index = index + start_disable + 7;
+            if let Some(end_disable) = program[index..].find("do()") {
+                index = index + end_disable;
+            } else {
+                break;
+            }
+        } else {
+            parts.push(&program[index..]);
+            break;
+        }
+    }
+    return parts.join("");
+}
+
+pub fn run_mul_program(program: String, conditionals: bool) -> isize {
+    let mut program = program;
+    if conditionals {
+        program = erase_disabled_code(program);
+    }
+    let mul_ops = cleanup_program(program);
+    return execute_mul_ops(mul_ops);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -168,5 +215,70 @@ mod tests {
 
         assert!(!report_safety(&unsafe_report1, true));
         assert!(!report_safety(&unsafe_report2, true));
+    }
+
+    #[test]
+    fn cleanup_program_works() {
+        let corrupted_program =
+            String::from("xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))");
+        let mul_ops = cleanup_program(corrupted_program);
+        assert_eq!(mul_ops, vec![(2, 4), (5, 5), (11, 8), (8, 5)]);
+    }
+
+    #[test]
+    fn execute_mul_ops_works() {
+        let mul_ops = vec![(2, 4), (5, 5), (11, 8), (8, 5)];
+        let result = execute_mul_ops(mul_ops);
+        assert_eq!(result, 161);
+    }
+
+    #[test]
+    fn erase_disabled_code_works() {
+        let corrupted_program = String::from(
+            "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))",
+        );
+        let preprocessed_program = erase_disabled_code(corrupted_program);
+        assert_eq!(
+            preprocessed_program,
+            "xmul(2,4)&mul[3,7]!^don't()do()?mul(8,5))"
+        );
+
+        let corrupted_program_complex = String::from(
+            "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)do()+\nmul(32,64](mul(11,8)don't()undo()?mul(8,5))",
+        );
+        let preprocessed_program = erase_disabled_code(corrupted_program_complex);
+        assert_eq!(
+            preprocessed_program,
+            "xmul(2,4)&mul[3,7]!^don't()do()+\nmul(32,64](mul(11,8)don't()do()?mul(8,5))"
+        );
+
+        let corrupted_program_interleaved = String::from(
+            "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+\ndon't()mul(32,64](mul(11,8)do()undo()?mul(8,5))",
+        );
+        let preprocessed_program = erase_disabled_code(corrupted_program_interleaved);
+        assert_eq!(
+            preprocessed_program,
+            "xmul(2,4)&mul[3,7]!^don't()do()undo()?mul(8,5))"
+        );
+    }
+
+    #[test]
+    fn run_mul_program_works() {
+        let corrupted_program =
+            String::from("xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))");
+        let result = run_mul_program(corrupted_program, false);
+        assert_eq!(result, 161);
+
+        let corrupted_program_multiline = String::from(
+            "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+\nmul(32,64]then(mul(11,8)mul(8,5))",
+        );
+        let result = run_mul_program(corrupted_program_multiline, false);
+        assert_eq!(result, 161);
+
+        let corrupted_program_conditionals = String::from(
+            "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))",
+        );
+        let result = run_mul_program(corrupted_program_conditionals, true);
+        assert_eq!(result, 48);
     }
 }
