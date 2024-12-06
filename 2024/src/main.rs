@@ -4,7 +4,7 @@ use std::fs;
 // use aoc24::total_distance;
 // use aoc24::count_safe_reports;
 // use aoc24::run_mul_program;
-use aoc24::wordsearch::{find_word_all_directions, parse_input_04};
+use aoc24::wordsearch::{find_crossed_mas, parse_input_04};
 
 pub fn parse_input_01(contents: String) -> (Vec<usize>, Vec<usize>) {
     let mut left: Vec<usize> = Vec::new();
@@ -52,7 +52,7 @@ fn main() {
     let table = parse_input_04(contents);
     println!("Shape: {:?}", table.shape());
 
-    let result = find_word_all_directions(&table, "XMAS");
+    let result = find_crossed_mas(&table);
 
     println!("Result: {result}");
 }

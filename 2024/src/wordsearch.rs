@@ -74,6 +74,24 @@ pub fn find_word_all_directions(table: &Table, word: &str) -> usize {
     return total_count;
 }
 
+pub fn find_crossed_mas(table: &Table) -> usize {
+    let mut count = 0;
+    for ii in 1..(table.nrows() - 1) {
+        for jj in 1..(table.ncols() - 1) {
+            if table[(ii, jj)] == "A" {
+                if (((table[(ii - 1, jj - 1)] == "M") & (table[(ii + 1, jj + 1)] == "S"))
+                    | ((table[(ii - 1, jj - 1)] == "S") & (table[(ii + 1, jj + 1)] == "M")))
+                    & (((table[(ii - 1, jj + 1)] == "M") & (table[(ii + 1, jj - 1)] == "S"))
+                        | ((table[(ii - 1, jj + 1)] == "S") & (table[(ii + 1, jj - 1)] == "M")))
+                {
+                    count += 1;
+                }
+            }
+        }
+    }
+    return count;
+}
+
 pub fn parse_input_04(contents: String) -> Table {
     let lines = contents.lines();
     let mut table_data: Vec<Vec<String>> = Vec::new();
@@ -153,5 +171,34 @@ mod test {
         .map(|&s| s.to_string());
         let result = find_word_all_directions(&table, "XMAS");
         assert_eq!(result, 18);
+    }
+
+    #[test]
+    fn find_crossed_mas_works() {
+        // MMMSXXMASM
+        // MSAMXMSMSA
+        // AMXSXMAAMM
+        // MSAMASMSMX
+        // XMASAMXAMM
+        // XXAMMXXAMA
+        // SMSMSASXSS
+        // SAXAMASAAA
+        // MAMMMXMMMM
+        // MXMXAXMASX
+        let table = array![
+            ["M", "M", "M", "S", "X", "X", "M", "A", "S", "M"],
+            ["M", "S", "A", "M", "X", "M", "S", "M", "S", "A"],
+            ["A", "M", "X", "S", "X", "M", "A", "A", "M", "M"],
+            ["M", "S", "A", "M", "A", "S", "M", "S", "M", "X"],
+            ["X", "M", "A", "S", "A", "M", "X", "A", "M", "M"],
+            ["X", "X", "A", "M", "M", "X", "X", "A", "M", "A"],
+            ["S", "M", "S", "M", "S", "A", "S", "X", "S", "S"],
+            ["S", "A", "X", "A", "M", "A", "S", "A", "A", "A"],
+            ["M", "A", "M", "M", "M", "X", "M", "M", "M", "M"],
+            ["M", "X", "M", "X", "A", "X", "M", "A", "S", "X"],
+        ]
+        .map(|&s| s.to_string());
+        let result = find_crossed_mas(&table);
+        assert_eq!(result, 9);
     }
 }
