@@ -5,6 +5,7 @@ pub enum InvalidReportError {
     CannotDampen,
 }
 
+// TODO: Organize these functions in modules
 pub fn total_distance(left: &Vec<usize>, right: &Vec<usize>) -> usize {
     if left.len() != right.len() {
         panic!("Vectors must be the same length");
@@ -138,6 +139,8 @@ pub fn run_mul_program(program: String, conditionals: bool) -> isize {
     let mul_ops = cleanup_program(program);
     return execute_mul_ops(mul_ops);
 }
+
+pub mod wordsearch;
 
 #[cfg(test)]
 mod tests {
