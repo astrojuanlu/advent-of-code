@@ -4,7 +4,10 @@ use std::fs;
 // use aoc24::total_distance;
 // use aoc24::count_safe_reports;
 // use aoc24::run_mul_program;
-use aoc24::wordsearch::{find_crossed_mas, parse_input_04};
+// use aoc24::wordsearch::{find_crossed_mas, parse_input_04};
+use aoc24::printer::{add_middle_pages, parse_input_05, validate_update, Update};
+
+use petgraph::dot::{Config, Dot};
 
 pub fn parse_input_01(contents: String) -> (Vec<usize>, Vec<usize>) {
     let mut left: Vec<usize> = Vec::new();
@@ -46,13 +49,20 @@ pub fn parse_input_02(contents: String) -> Vec<Vec<isize>> {
 }
 
 fn main() {
-    let contents = fs::read_to_string("input04.txt").expect("File 'input04.txt' should be present");
+    let contents = fs::read_to_string("input05.txt").expect("File 'input05.txt' should be present");
     println!("{contents}");
 
-    let table = parse_input_04(contents);
-    println!("Shape: {:?}", table.shape());
+    let (rules, updates) = parse_input_05(contents);
+    println!("Rules: {rules:?}");
+    println!("Updates: {updates:?}");
+    println!("{:?}", Dot::with_config(&rules, &[Config::EdgeNoLabel]));
 
-    let result = find_crossed_mas(&table);
-
+    let valid_updates: Vec<Update> = updates
+        .iter()
+        .filter(|&u| validate_update(u, &rules))
+        .cloned()
+        .collect();
+    println!("Len valid updates: {:?}", valid_updates.len());
+    let result = add_middle_pages(&valid_updates);
     println!("Result: {result}");
 }
