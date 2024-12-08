@@ -1,11 +1,18 @@
+use core::fmt::Debug;
+
 use petgraph::graphmap::DiGraphMap;
-use petgraph::visit::DfsPostOrder;
+use petgraph::visit::{Data, DfsPostOrder, GraphBase, GraphProp, IntoNeighbors, Visitable};
+use petgraph::Directed;
 
 pub type Page = usize;
 pub type Ruleset = DiGraphMap<Page, ()>;
 pub type Update = Vec<Page>;
 
-pub fn validate_update(update: &Update, ruleset: &Ruleset) -> bool {
+pub fn validate_update<G>(update: &Update, ruleset: G) -> bool
+where
+    G: GraphBase<NodeId = Page> + Data + Visitable + IntoNeighbors + GraphProp<EdgeType = Directed>,
+    <G as Visitable>::Map: Debug,
+{
     // Graph might contain cycles, so we use post-order (backwards) depth-first search
     let mut visitor = DfsPostOrder::new(ruleset, update[0]);
     let mut seq_iter = update.iter().rev();
@@ -95,6 +102,33 @@ mod test {
         assert!(validate_update(&valid_update_traversing_cycle, &rules));
         assert!(!validate_update(&invalid_update, &rules));
     }
+
+    #[test]
+    fn validate_update_with_circular_rules_works() {
+        let rules = Ruleset::from_edges(&[(47, 75), (75, 13), (13, 53), (53, 47)]);
+        let valid_update1 = Update::from_iter([53, 47, 75]);
+        let valid_update2 = Update::from_iter([75, 13, 53]);
+        let invalid_update = Update::from_iter([53, 75, 47]);
+
+        assert!(validate_update(&valid_update1, &rules));
+        assert!(validate_update(&valid_update2, &rules));
+        assert!(!validate_update(&invalid_update, &rules));
+    }
+
+    #[test]
+    fn validate_update_with_tournament_graph_rules_works() {
+        let rules =
+            Ruleset::from_edges(&[(47, 75), (75, 13), (13, 53), (53, 47), (47, 13), (75, 53)]);
+        let valid_update1 = Update::from_iter([47, 75, 13]);
+        let valid_update2 = Update::from_iter([13, 53]);
+        let invalid_update = Update::from_iter([53, 75, 47]);
+
+        assert!(validate_update(&valid_update1, &rules));
+        assert!(validate_update(&valid_update2, &rules));
+        assert!(!validate_update(&invalid_update, &rules));
+    }
+
+    // TODO: Add test that exemplifies behavior of real input
 
     #[test]
     fn add_middle_pages_works() {

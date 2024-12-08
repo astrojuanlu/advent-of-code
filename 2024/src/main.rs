@@ -8,6 +8,7 @@ use std::fs;
 use aoc24::printer::{add_middle_pages, parse_input_05, validate_update, Update};
 
 use petgraph::dot::{Config, Dot};
+use petgraph::visit::NodeFiltered;
 
 pub fn parse_input_01(contents: String) -> (Vec<usize>, Vec<usize>) {
     let mut left: Vec<usize> = Vec::new();
@@ -59,7 +60,7 @@ fn main() {
 
     let valid_updates: Vec<Update> = updates
         .iter()
-        .filter(|&u| validate_update(u, &rules))
+        .filter(|&u| validate_update(u, &NodeFiltered::from_fn(&rules, |node| u.contains(&node))))
         .cloned()
         .collect();
     println!("Len valid updates: {:?}", valid_updates.len());
