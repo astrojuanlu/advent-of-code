@@ -75,6 +75,8 @@ pub fn parse_input_05(contents: String) -> (DiGraphMap<Page, ()>, Vec<Update>) {
 mod test {
     use super::*;
 
+    use petgraph::visit::{IntoEdgeReferences, NodeFiltered};
+
     #[test]
     fn validate_update_works() {
         let rules = Ruleset::from_edges(&[(47, 53), (75, 53), (47, 13), (75, 47), (75, 13)]);
@@ -128,7 +130,32 @@ mod test {
         assert!(!validate_update(&invalid_update, &rules));
     }
 
-    // TODO: Add test that exemplifies behavior of real input
+    #[test]
+    fn validate_update_with_wicked_cycle_fails() {
+        let rules = Ruleset::from_edges([
+            (29, 16), // Cycle
+            (52, 16), // Rule of interest
+            (16, 47), // Rule of interest
+            (47, 29), // Cycle
+            (52, 47), // Rule of interest
+        ]);
+
+        let valid_update = Update::from_iter([52, 16, 47]);
+
+        // This fails! Hence the need to ignore certain rules
+        assert!(!validate_update(&valid_update, &rules));
+
+        let filtered_rules = NodeFiltered::from_fn(&rules, |node| valid_update.contains(&node));
+        let filtered_edges = filtered_rules
+            .edge_references()
+            .map(|e| (e.0, e.1))
+            .collect::<Vec<(Page, Page)>>();
+
+        // In the end the rules of interest are fewer
+        assert_eq!(filtered_edges, [(52, 16), (16, 47), (52, 47)]);
+        // With the filtered rules, the update is properly considered valid
+        assert!(validate_update(&valid_update, &filtered_rules));
+    }
 
     #[test]
     fn add_middle_pages_works() {

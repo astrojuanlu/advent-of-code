@@ -63,7 +63,9 @@ fn main() {
         .filter(|&u| validate_update(u, &NodeFiltered::from_fn(&rules, |node| u.contains(&node))))
         .cloned()
         .collect();
+
     println!("Len valid updates: {:?}", valid_updates.len());
+
     let result = add_middle_pages(&valid_updates);
     println!("Result: {result}");
 }
