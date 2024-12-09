@@ -140,6 +140,7 @@ pub fn run_mul_program(program: String, conditionals: bool) -> isize {
     return execute_mul_ops(mul_ops);
 }
 
+pub mod maps;
 pub mod printer;
 pub mod wordsearch;
 

@@ -1,16 +1,14 @@
-use std::fs;
+use std::{collections::HashSet, fs};
 
 // use aoc24::similarity_score;
 // use aoc24::total_distance;
 // use aoc24::count_safe_reports;
 // use aoc24::run_mul_program;
 // use aoc24::wordsearch::{find_crossed_mas, parse_input_04};
-use aoc24::printer::{
-    add_middle_pages, generate_valid_update, parse_input_05, validate_update, Update,
-};
-
-use petgraph::dot::{Config, Dot};
-use petgraph::visit::NodeFiltered;
+// use aoc24::printer::{
+//     add_middle_pages, generate_valid_update, parse_input_05, validate_update, Update,
+// };
+use aoc24::maps::{parse_input_06, walk};
 
 pub fn parse_input_01(contents: String) -> (Vec<usize>, Vec<usize>) {
     let mut left: Vec<usize> = Vec::new();
@@ -52,36 +50,14 @@ pub fn parse_input_02(contents: String) -> Vec<Vec<isize>> {
 }
 
 fn main() {
-    let contents = fs::read_to_string("input05.txt").expect("File 'input05.txt' should be present");
+    let contents =
+        fs::read_to_string("input06.txt").expect("File 'input06.txt' should be present");
     println!("{contents}");
 
-    let (rules, updates) = parse_input_05(contents);
-    println!("Rules: {rules:?}");
-    println!("Updates: {updates:?}");
-    println!("{:?}", Dot::with_config(&rules, &[Config::EdgeNoLabel]));
+    let (map, start, initial_direction) = parse_input_06(contents);
+    println!("{:?}, {:?}, {:?}", map, start, initial_direction);
 
-    let valid_updates: Vec<Update> = updates
-        .iter()
-        .filter(|&u| validate_update(u, &NodeFiltered::from_fn(&rules, |node| u.contains(&node))))
-        .cloned()
-        .collect();
-
-    let invalid_updates: Vec<Update> = updates
-        .iter()
-        .filter(|&u| !validate_update(u, &NodeFiltered::from_fn(&rules, |node| u.contains(&node))))
-        .cloned()
-        .collect();
-
-    println!("Len *in*valid updates: {:?}", valid_updates.len());
-
-    let fixed_updates = invalid_updates
-        .iter()
-        .map(|u| {
-            generate_valid_update(&NodeFiltered::from_fn(&rules, |node| u.contains(&node))).unwrap()
-        })
-        // .cloned()
-        .collect::<Vec<Update>>();
-
-    let result = add_middle_pages(&fixed_updates);
+    let path = walk(map, start, initial_direction);
+    let result = path.iter().collect::<HashSet<_>>().len();
     println!("Result: {result}");
 }
