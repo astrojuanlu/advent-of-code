@@ -1,7 +1,11 @@
 use core::fmt::Debug;
 
+use petgraph::algo::{toposort, Cycle};
 use petgraph::graphmap::DiGraphMap;
-use petgraph::visit::{Data, DfsPostOrder, GraphBase, GraphProp, IntoNeighbors, Visitable};
+use petgraph::visit::{
+    Data, DfsPostOrder, GraphBase, GraphProp, IntoNeighbors, IntoNeighborsDirected,
+    IntoNodeIdentifiers, Visitable,
+};
 use petgraph::Directed;
 
 pub type Page = usize;
@@ -39,6 +43,19 @@ pub fn add_middle_pages(updates: &Vec<Update>) -> Page {
         middle_pages.push(update[update.len() / 2]);
     }
     return middle_pages.iter().fold(0, |acc, p| acc + p);
+}
+
+pub fn generate_valid_update<G>(ruleset: G) -> Result<Vec<G::NodeId>, Cycle<G::NodeId>>
+where
+    G: GraphBase<NodeId = Page>
+        + Data
+        + Visitable
+        + IntoNeighborsDirected
+        + IntoNodeIdentifiers
+        + GraphProp<EdgeType = Directed>,
+    <G as Visitable>::Map: Debug,
+{
+    return toposort(ruleset, None);
 }
 
 pub fn parse_input_05(contents: String) -> (DiGraphMap<Page, ()>, Vec<Update>) {

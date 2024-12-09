@@ -5,7 +5,9 @@ use std::fs;
 // use aoc24::count_safe_reports;
 // use aoc24::run_mul_program;
 // use aoc24::wordsearch::{find_crossed_mas, parse_input_04};
-use aoc24::printer::{add_middle_pages, parse_input_05, validate_update, Update};
+use aoc24::printer::{
+    add_middle_pages, generate_valid_update, parse_input_05, validate_update, Update,
+};
 
 use petgraph::dot::{Config, Dot};
 use petgraph::visit::NodeFiltered;
@@ -64,8 +66,22 @@ fn main() {
         .cloned()
         .collect();
 
-    println!("Len valid updates: {:?}", valid_updates.len());
+    let invalid_updates: Vec<Update> = updates
+        .iter()
+        .filter(|&u| !validate_update(u, &NodeFiltered::from_fn(&rules, |node| u.contains(&node))))
+        .cloned()
+        .collect();
 
-    let result = add_middle_pages(&valid_updates);
+    println!("Len *in*valid updates: {:?}", valid_updates.len());
+
+    let fixed_updates = invalid_updates
+        .iter()
+        .map(|u| {
+            generate_valid_update(&NodeFiltered::from_fn(&rules, |node| u.contains(&node))).unwrap()
+        })
+        // .cloned()
+        .collect::<Vec<Update>>();
+
+    let result = add_middle_pages(&fixed_updates);
     println!("Result: {result}");
 }
